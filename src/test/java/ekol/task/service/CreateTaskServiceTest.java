@@ -51,7 +51,7 @@ public class CreateTaskServiceTest {
     }
 
     @Test
-    public void shouldAssignNewStatusToTask(){
+    public void shouldSetNewStatusToTask(){
         Task validTask = aValidTask().but().withStatus(null).build();
         when(taskRepository.save(validTask)).thenReturn(validTask);
         createTaskService.create(validTask);
@@ -60,6 +60,18 @@ public class CreateTaskServiceTest {
         verify(taskValidator).validateNewTask(validTask);
         verify(taskRepository).save(captor.capture());
         assertThat(captor.getValue().getStatus(), equalTo(TaskStatus.NEW));
+    }
+
+    @Test
+    public void shouldSetCreatedDateToTask(){
+        Task validTask = aValidTask().but().withCreatedAt(null).build();
+        when(taskRepository.save(validTask)).thenReturn(validTask);
+        createTaskService.create(validTask);
+
+        ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
+        verify(taskValidator).validateNewTask(validTask);
+        verify(taskRepository).save(captor.capture());
+        assertThat(captor.getValue().getCreatedAt(), notNullValue());
     }
 
     @Test(expected = ValidationError.class)
