@@ -1,0 +1,9 @@
+
+spring:
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: task-service
+      authentication-database: task-service
+      mechanism: SCRAM-SHA-1
