@@ -22,6 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
@@ -53,12 +54,15 @@ public class TaskControllerTest {
 
     @Test
     public void shouldReturnOKForValidTask() throws Exception{
-        Task validTask = aValidTask().build();
+        String id = "1";
+        Task validTask = aValidTask().withId(id).build();
         when(createTaskService.create(any(Task.class))).thenReturn(validTask);
 
         this.mockMvc.perform(post(ENDPOINT_URL)
                 .contentType(MediaType.APPLICATION_JSON).content(toJson(validTask)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("id").value(id))
+                .andExpect(jsonPath("name").value(validTask.getName()));
 
         verify(createTaskService).create(any(Task.class));
     }
@@ -78,9 +82,13 @@ public class TaskControllerTest {
     @Test
     public void shouldReturnOKForFetchValidId() throws Exception{
         String id = "1";
-        when(fetchTaskService.fetch(id)).thenReturn(aValidTask().build());
+        Task validTask = aValidTask().withId(id).build();
+        when(fetchTaskService.fetch(id)).thenReturn(validTask);
 
-        this.mockMvc.perform(get(getFetchUrl(id))).andExpect(status().isOk());
+        this.mockMvc.perform(get(getFetchUrl(id)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("id").value(id))
+                .andExpect(jsonPath("name").value(validTask.getName()));
 
         verify(fetchTaskService).fetch(id);
     }
@@ -99,7 +107,8 @@ public class TaskControllerTest {
     public void shouldReturnOKForFindAll() throws Exception{
         when(fetchTaskService.findAll(1,1)).thenReturn(null);
 
-        this.mockMvc.perform(get(ENDPOINT_URL).param("page","1").param("size","1")).andExpect(status().isOk());
+        this.mockMvc.perform(get(ENDPOINT_URL).param("page","1").param("size","1"))
+                .andExpect(status().isOk());
 
         verify(fetchTaskService).findAll(1,1);
     }
