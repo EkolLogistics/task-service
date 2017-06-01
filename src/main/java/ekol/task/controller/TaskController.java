@@ -7,9 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Created by kilimci on 30/05/2017.
- */
 @RestController
 @RequestMapping("/tasks")
 public class TaskController {
@@ -34,6 +31,11 @@ public class TaskController {
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Task get(@PathVariable String id){
         return fetchTaskService.fetch(id);
+    }
+
+    @RequestMapping(value = "/with-template/{templateId}", method = RequestMethod.POST)
+    public Task createWithTemplate(@PathVariable String templateId){
+        return createTaskService.createWithTemplate(templateId);
     }
 
 }

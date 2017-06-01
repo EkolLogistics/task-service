@@ -6,13 +6,14 @@ import ekol.task.domain.TaskStatus;
 import java.time.ZonedDateTime;
 
 /**
- * Created by kilimci on 31/05/2017.
+ * Created by kilimci on 01/06/2017.
  */
 public final class TaskBuilder {
     private String id;
     private String name;
     private TaskStatus status;
     private ZonedDateTime createdAt;
+    private ZonedDateTime due;
 
     private TaskBuilder() {
     }
@@ -41,8 +42,13 @@ public final class TaskBuilder {
         return this;
     }
 
+    public TaskBuilder withDue(ZonedDateTime due) {
+        this.due = due;
+        return this;
+    }
+
     public TaskBuilder but() {
-        return aTask().withId(id).withName(name).withStatus(status).withCreatedAt(createdAt);
+        return aTask().withId(id).withName(name).withStatus(status).withCreatedAt(createdAt).withDue(due);
     }
 
     public Task build() {
@@ -51,6 +57,7 @@ public final class TaskBuilder {
         task.setName(name);
         task.setStatus(status);
         task.setCreatedAt(createdAt);
+        task.setDue(due);
         return task;
     }
 }

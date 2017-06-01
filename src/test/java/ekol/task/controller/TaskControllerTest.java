@@ -121,4 +121,18 @@ public class TaskControllerTest {
 
         verify(fetchTaskService).findAll(null,null);
     }
+
+    @Test
+    public void shouldReturnOKForCreateWithTemplate() throws Exception{
+        String templateId = "1";
+        Task validTask = aValidTask().build();
+        when(createTaskService.createWithTemplate(templateId)).thenReturn(validTask);
+
+        this.mockMvc.perform(post(ENDPOINT_URL + "/with-template/" + templateId)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("name").value(validTask.getName()));
+
+        verify(createTaskService).createWithTemplate(templateId);
+    }
 }

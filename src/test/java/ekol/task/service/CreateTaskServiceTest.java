@@ -2,6 +2,7 @@ package ekol.task.service;
 
 import ekol.task.domain.Task;
 import ekol.task.domain.TaskStatus;
+import ekol.task.domain.TaskTemplate;
 import ekol.task.domain.exception.ValidationError;
 import ekol.task.domain.validator.TaskValidator;
 import ekol.task.repository.TaskRepository;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static ekol.task.builder.Builder.aValidTask;
+import static ekol.task.builder.Builder.aValidTemplate;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -28,6 +30,9 @@ public class CreateTaskServiceTest {
 
     @MockBean
     private TaskValidator taskValidator;
+
+    @MockBean
+    private FetchTaskTemplateService fetchTaskTemplateService;
 
     @Autowired
     private CreateTaskService createTaskService;
@@ -83,4 +88,30 @@ public class CreateTaskServiceTest {
         createTaskService.create(validTask);
     }
 
+    @Test
+    public void shouldCreateTaskWithTemplate(){
+        String id = "1";
+        TaskTemplate validTemplate = aValidTemplate().build();
+        when(fetchTaskTemplateService.fetch(id)).thenReturn(validTemplate);
+        when(taskRepository.save(any(Task.class))).thenReturn(null);
+
+        createTaskService.createWithTemplate(id);
+
+        ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
+        verify(taskValidator).validateNewTask(any(Task.class));
+        verify(taskRepository).save(captor.capture());
+        assertThat(captor.getValue().getStatus(), equalTo(TaskStatus.NEW));
+        assertThat(captor.getValue().getName(), equalTo(validTemplate.getName()));
+        assertThat(captor.getValue().getCreatedAt(), notNullValue());
+        assertThat(captor.getValue().getDue(), equalTo(captor.getValue().getCreatedAt().plus(validTemplate.getDuration())));
+    }
+
+    @Test(expected = ValidationError.class)
+    public void shouldNotCreateTaskWithNonExistingTemplateId(){
+        String id = "1";
+        doThrow(new ValidationError("template not found")).when(fetchTaskTemplateService).fetch(id);
+        when(taskRepository.save(any(Task.class))).thenReturn(null);
+
+        createTaskService.createWithTemplate(id);
+    }
 }
