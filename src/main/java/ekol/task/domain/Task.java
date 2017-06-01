@@ -15,6 +15,7 @@ public class Task {
     private TaskStatus status;
     private ZonedDateTime createdAt;
     private ZonedDateTime due;
+    private Assignment assignment;
 
     public static Task withTemplate(TaskTemplate template){
         Task newTask = new Task();
@@ -70,5 +71,13 @@ public class Task {
 
     public void setDue(ZonedDateTime due) {
         this.due = due;
+    }
+
+    public Assignment getAssignment() {
+        return assignment;
+    }
+
+    public void setAssignment(Assignment assignment) {
+        this.assignment = assignment;
     }
 }

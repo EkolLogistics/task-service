@@ -1,8 +1,10 @@
 package ekol.task.controller;
 
+import ekol.task.domain.Assignee;
 import ekol.task.domain.Task;
 import ekol.task.service.CreateTaskService;
 import ekol.task.service.FetchTaskService;
+import ekol.task.service.TaskOperationsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,9 @@ public class TaskController {
 
     @Autowired
     private CreateTaskService createTaskService;
+
+    @Autowired
+    private TaskOperationsService taskOperationsService;
 
     @Autowired
     private FetchTaskService fetchTaskService;
@@ -36,6 +41,11 @@ public class TaskController {
     @RequestMapping(value = "/with-template/{templateId}", method = RequestMethod.POST)
     public Task createWithTemplate(@PathVariable String templateId){
         return createTaskService.createWithTemplate(templateId);
+    }
+
+    @RequestMapping(value = "/{id}/assign-to", method = RequestMethod.POST)
+    public Task createWithTemplate(@PathVariable String id, @RequestBody Assignee assignee){
+        return taskOperationsService.assign(id, assignee);
     }
 
 }

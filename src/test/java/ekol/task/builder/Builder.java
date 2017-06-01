@@ -14,6 +14,9 @@ public class Builder {
         return TaskBuilder.aTask();
     }
 
+    public static TaskBuilder aValidTaskWithAssignment(){
+        return aValidTask().withAssignment(aValidAssignment().build());
+    }
 
     public static TaskTemplateBuilder aValidTemplate(){
         return TaskTemplateBuilder.aTaskTemplate().withName("test").withDuration(Duration.ofMinutes(1));
@@ -21,5 +24,19 @@ public class Builder {
 
     public static TaskTemplateBuilder anInvalidTemplate(){
         return TaskTemplateBuilder.aTaskTemplate();
+    }
+
+    public static AssigneeBuilder aValidAssignee(){
+        return AssigneeBuilder.anAssignee().withName("test").withId("1");
+    }
+    public static AssigneeBuilder anInvalidAssignee(){
+        return AssigneeBuilder.anAssignee();
+    }
+
+    public static AssignmentBuilder aValidAssignment(){
+        return AssignmentBuilder.anAssignment().withAssignedAt(ZonedDateTime.now()).withAssignee(aValidAssignee().build());
+    }
+    public static AssignmentBuilder anInvalidAssignment(){
+        return AssignmentBuilder.anAssignment();
     }
 }

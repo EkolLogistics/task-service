@@ -1,5 +1,6 @@
 package ekol.task.builder;
 
+import ekol.task.domain.Assignment;
 import ekol.task.domain.Task;
 import ekol.task.domain.TaskStatus;
 
@@ -14,6 +15,7 @@ public final class TaskBuilder {
     private TaskStatus status;
     private ZonedDateTime createdAt;
     private ZonedDateTime due;
+    private Assignment assignment;
 
     private TaskBuilder() {
     }
@@ -47,8 +49,13 @@ public final class TaskBuilder {
         return this;
     }
 
+    public TaskBuilder withAssignment(Assignment assignment) {
+        this.assignment = assignment;
+        return this;
+    }
+
     public TaskBuilder but() {
-        return aTask().withId(id).withName(name).withStatus(status).withCreatedAt(createdAt).withDue(due);
+        return aTask().withId(id).withName(name).withStatus(status).withCreatedAt(createdAt).withDue(due).withAssignment(assignment);
     }
 
     public Task build() {
@@ -58,6 +65,7 @@ public final class TaskBuilder {
         task.setStatus(status);
         task.setCreatedAt(createdAt);
         task.setDue(due);
+        task.setAssignment(assignment);
         return task;
     }
 }

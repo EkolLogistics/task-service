@@ -1,13 +1,16 @@
 package ekol.task.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ekol.task.domain.Assignee;
 import ekol.task.domain.Task;
 import ekol.task.domain.exception.ResourceNotFoundError;
 import ekol.task.domain.exception.ValidationError;
 import ekol.task.service.CreateTaskService;
 import ekol.task.service.FetchTaskService;
+import ekol.task.service.TaskOperationsService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -15,9 +18,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static ekol.task.builder.Builder.aValidTask;
-import static ekol.task.builder.Builder.anInvalidTask;
+import static ekol.task.builder.Builder.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -39,6 +44,9 @@ public class TaskControllerTest {
     @MockBean
     private FetchTaskService fetchTaskService;
 
+    @MockBean
+    private TaskOperationsService taskOperationsService;
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -48,8 +56,8 @@ public class TaskControllerTest {
         return ENDPOINT_URL + "/" + id;
     }
 
-    private String toJson(Task task) throws Exception{
-        return objectMapper.writeValueAsString(task);
+    private String toJson(Object obj) throws Exception{
+        return objectMapper.writeValueAsString(obj);
     }
 
     @Test
@@ -134,5 +142,52 @@ public class TaskControllerTest {
                 .andExpect(jsonPath("name").value(validTask.getName()));
 
         verify(createTaskService).createWithTemplate(templateId);
+    }
+
+    @Test
+    public void shouldReturnOKForValidAssignment() throws Exception{
+        String taskId = "1";
+        Assignee validAssignee = aValidAssignee().build();
+        Task validTaskWithAssignment = aValidTaskWithAssignment().build();
+        when(taskOperationsService.assign(eq(taskId), any(Assignee.class))).thenReturn(validTaskWithAssignment);
+        this.mockMvc.perform(post(getFetchUrl(taskId) + "/assign-to")
+                .contentType(MediaType.APPLICATION_JSON).content(toJson(validAssignee)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("name").value(validTaskWithAssignment.getName()))
+                .andExpect(jsonPath("assignment").isNotEmpty())
+                .andExpect(jsonPath("assignment.assignee").isNotEmpty())
+                .andExpect(jsonPath("assignment.assignee.id").value(validAssignee.getId()))
+                .andExpect(jsonPath("assignment.assignee.name").value(validAssignee.getName()));
+
+        ArgumentCaptor<Assignee> captor = ArgumentCaptor.forClass(Assignee.class);
+        verify(taskOperationsService).assign(eq(taskId), captor.capture());
+        assertThat(captor.getValue().getId(), equalTo(validAssignee.getId()));
+        assertThat(captor.getValue().getName(), equalTo(validAssignee.getName()));
+    }
+
+    @Test
+    public void shouldReturnNotFoundForAssignToInvalidTask() throws Exception{
+        String taskId = "1";
+        Assignee validAssignee = aValidAssignee().build();
+        when(taskOperationsService.assign(eq(taskId), any(Assignee.class))).thenThrow(new ResourceNotFoundError("not found"));
+
+        this.mockMvc.perform(post(getFetchUrl(taskId) + "/assign-to")
+                .contentType(MediaType.APPLICATION_JSON).content(toJson(validAssignee)))
+                .andExpect(status().isNotFound());
+
+        verify(taskOperationsService).assign(eq(taskId), any(Assignee.class));
+    }
+
+    @Test
+    public void shouldReturnBadRequestForInvalidAssignmentToTask() throws Exception{
+        String taskId = "1";
+        Assignee invalidAssignee = anInvalidAssignee().build();
+        when(taskOperationsService.assign(eq(taskId), any(Assignee.class))).thenThrow(new ValidationError("assignee not valid"));
+
+        this.mockMvc.perform(post(getFetchUrl(taskId) + "/assign-to")
+                .contentType(MediaType.APPLICATION_JSON).content(toJson(invalidAssignee)))
+                .andExpect(status().isBadRequest());
+
+        verify(taskOperationsService).assign(eq(taskId), any(Assignee.class));
     }
 }
